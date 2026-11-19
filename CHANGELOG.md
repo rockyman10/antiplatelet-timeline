@@ -2,6 +2,15 @@
 
 Newest first. Record site changes here. The site does not render this file.
 
+## 2026-11-19 — Phase 1 trial cards
+
+- Six lanes replace the skeleton lanes: ACS P2Y12 inhibitor choice, PCI and DAPT duration, de-escalation and P2Y12 monotherapy, stroke and TIA, aspirin primary and secondary prevention, and PAD and vascular.
+- 43 full cards and 4 link-only stubs replace the two placeholder cards. Wording, numbers, PMIDs, DOIs, and arm labels are the literature-cleared draft. `guidelines` stays empty. `reviewedBy` stays empty.
+- Link-only stubs are COMPASS, VOYAGER PAD, ATLAS ACS 2–TIMI 51, and AQUATIC. Each opens its card on the anticoagulation timeline and carries no result text.
+- Cards may include `secondaryResults`. The snapshot and More details show that field when it has text.
+- Practice questions remain the two EXAMPLE placeholders.
+- Phase 1 sourcing notes are in `docs/sources-phase1.md`.
+
 ## 2026-11-19 — Skeleton
 
 - First teaching shell for randomized antiplatelet trials: topic lanes from 1999, search, topic filters, an abbreviation key, a trial snapshot, more details, a learn path, and practice questions in study mode and a timed exam.

@@ -8,8 +8,8 @@ window.ANTIPLATELET_QUESTIONS = {
     {
       id: "q-example-1",
       placeholder: true,
-      topic: "acs",
-      relatedTrialId: "example-a",
+      topic: "acs-p2y12",
+      relatedTrialId: "plato",
       stem: "EXAMPLE, not a real trial. Which line is the keyed choice on this layout sample?",
       choices: [
         { id: "a", text: "Layout sample line, and this one is the keyed choice." },
@@ -29,7 +29,7 @@ window.ANTIPLATELET_QUESTIONS = {
       id: "q-example-2",
       placeholder: true,
       topic: "stroke-tia",
-      relatedTrialId: "example-b",
+      relatedTrialId: "chance",
       stem: "EXAMPLE, not a real trial. Which line is the keyed choice on this second layout sample?",
       choices: [
         { id: "a", text: "Layout sample line for the second item, and this one is not keyed." },

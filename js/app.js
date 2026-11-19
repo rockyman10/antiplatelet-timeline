@@ -279,14 +279,17 @@
       }
       packed.items.forEach(item => {
         const trial = item.trial;
-        const marker = h("div", { class: "mk" + (trial.status === "pending" ? " pending" : "") });
+        const marker = h("div", { class: "mk" + (trial.status === "pending" ? " pending" : "") + (trial.status === "link-only" ? " link-only" : "") });
         marker.style.left = item.cx + "px";
         marker.style.setProperty("--m-color", topic.color);
         const text = zoom >= 1.35 ? trial.acronym + " · " + trial.yearLabel : trial.acronym;
+        const labelBits = [trial.acronym, trial.yearLabel, topic.label];
+        if (trial.status === "link-only") labelBits.push("Link-only card");
+        labelBits.push(trial.title);
         const button = h("button", {
           type: "button",
           "data-id": trial.id,
-          "aria-label": trial.acronym + ", " + trial.yearLabel + ", " + topic.label + ". " + trial.title
+          "aria-label": labelBits.join(". ")
         }, [text]);
         marker.append(button);
         track.children[item.sub].append(marker);
@@ -325,8 +328,24 @@
     return row;
   }
 
+  function isLinkOnly(trial) {
+    return trial.status === "link-only";
+  }
+
+  function crossHref(link) {
+    if (!link || typeof link !== "object") return "";
+    if (link.href) return link.href;
+    if (link.url) return link.url;
+    if (link.id) return "https://rockyman10.github.io/anticoag-timeline/#/trial/" + link.id;
+    return "";
+  }
+
   function renderDetail(trial, view) {
     const details = view === "details";
+    if (isLinkOnly(trial)) {
+      renderLinkOnly(trial, details);
+      return;
+    }
     $("d-view").textContent = details ? "More details" : "Trial snapshot";
     $("d-title").textContent = trial.acronym;
     $("d-year").textContent = trial.yearLabel + " · " + topicLabel(trial.topic) + " · " + trial.status;
@@ -339,15 +358,18 @@
       h("p", { text: trial.takeaway })
     ]));
     const dl = h("dl", { class: "fields" });
-    [
+    const pairs = [
       ["Design", trial.design],
       ["Population", trial.population],
       ["Intervention", trial.intervention],
       ["Comparator", trial.comparator],
-      ["Primary endpoint result", trial.primaryResult],
-      ["Safety", trial.safety],
-      ["Citation", trial.citation]
-    ].forEach(pair => field(dl, pair[0], pair[1]));
+      ["Primary endpoint result", trial.primaryResult]
+    ];
+    if (typeof trial.secondaryResults === "string" && trial.secondaryResults.trim()) {
+      pairs.push(["Secondary results", trial.secondaryResults]);
+    }
+    pairs.push(["Safety", trial.safety], ["Citation", trial.citation]);
+    pairs.forEach(pair => field(dl, pair[0], pair[1]));
     dl.append(identifierField(trial));
     if (details) field(dl, "Limitations", trial.limitations);
     body.append(dl);
@@ -405,13 +427,70 @@
     ensureFocus("detail");
   }
 
+  function renderLinkOnly(trial, details) {
+    $("d-view").textContent = details ? "More details" : "Trial snapshot";
+    $("d-title").textContent = trial.acronym;
+    $("d-year").textContent = trial.yearLabel + " · " + topicLabel(trial.topic) + " · link only";
+    const body = $("d-body");
+    body.replaceChildren();
+    if (trial.title) body.append(h("p", { class: "card-title", text: trial.title }));
+    const dl = h("dl", { class: "fields" });
+    field(dl, "Citation", trial.citation);
+    dl.append(identifierField(trial));
+    body.append(dl);
+    const cross = renderCrossSite(trial);
+    if (cross) body.append(cross);
+    if (details) {
+      body.append(h("h3", { class: "block-title", text: "Sources" }));
+      const list = h("ul", { class: "sources" });
+      (trial.sources || []).forEach(source => {
+        const bits = [source.label || "Source"];
+        if (source.pmid) bits.push("PMID " + source.pmid);
+        if (source.doi) bits.push("DOI " + source.doi);
+        if (source.note) bits.push(source.note);
+        list.append(h("li", { text: bits.join(" · ") }));
+      });
+      body.append(list);
+    }
+    const foot = $("d-foot");
+    foot.replaceChildren();
+    const href = crossHref(trial.crossSite);
+    if (href) {
+      const open = h("a", {
+        class: "btn primary",
+        href: href,
+        target: "_blank",
+        rel: "noopener noreferrer",
+        id: "d-cross"
+      });
+      open.append(document.createTextNode((trial.crossSite && trial.crossSite.label) || "Open the anticoagulation timeline"));
+      open.append(h("span", { class: "sr-only", text: " (opens in a new tab)" }));
+      foot.append(open);
+    }
+    if (details) {
+      const back = h("button", { type: "button", class: "btn", id: "d-back", text: "Back to snapshot" });
+      back.addEventListener("click", () => navigate("#/trial/" + trial.id, true));
+      foot.append(back);
+    } else {
+      const more = h("button", { type: "button", class: "btn", id: "d-more", text: "More details" });
+      more.addEventListener("click", () => navigate("#/trial/" + trial.id + "/details"));
+      foot.append(more);
+    }
+    const copy = h("button", { type: "button", class: "btn", id: "d-copy", text: "Copy link" });
+    copy.addEventListener("click", () => copyLink(copy));
+    foot.append(copy);
+    setTitle(trial.acronym + " " + (details ? "details" : "snapshot"));
+    ensureFocus("detail");
+  }
+
   function renderCrossSite(trial) {
     const link = trial.crossSite;
-    if (!link || typeof link !== "object" || !link.href) return null;
+    const href = crossHref(link);
+    if (!link || typeof link !== "object" || !href) return null;
     const block = h("p", { class: "cross-site" });
     block.append(h("span", { class: "lab", text: "Anticoagulation timeline" }));
     const anchor = h("a", {
-      href: link.href,
+      href: href,
       target: "_blank",
       rel: "noopener noreferrer"
     });

@@ -6,7 +6,7 @@ The page is plain HTML, CSS, and JavaScript. There is no build step. It is meant
 
 The scope is randomized trials of antiplatelet drugs (aspirin, P2Y12 inhibitors, cangrelor, glycoprotein IIb/IIIa inhibitors, vorapaxar, cilostazol, and similar agents) in acute coronary syndromes, percutaneous coronary intervention and dual antiplatelet therapy duration, de-escalation and P2Y12 monotherapy, genotype-guided therapy, stroke and transient ischemic attack, peripheral artery disease, aspirin prevention, cardiac surgery, and transcatheter aortic valve implantation.
 
-This repository currently holds the skeleton only. `js/data/trials.js` and `js/data/questions.js` each contain two placeholder entries labeled `EXAMPLE, not a real trial`. They are not studies, and they do not report results.
+Phase 1 has 43 full trial cards and 4 link-only stubs on six lanes. Card wording is the literature-cleared text in `js/data/trials.js`. Sourcing notes for that pass are in `docs/sources-phase1.md`. `js/data/questions.js` still holds two placeholder items labeled `EXAMPLE, not a real trial`.
 
 This site is a sister teaching timeline to [anticoag-timeline](https://github.com/rockyman10/anticoag-timeline) and [critcare-timeline](https://github.com/rockyman10/critcare-timeline). The page shell follows those sites. Trial text is written here from primary sources. Do not paste clinical prose from the other repositories.
 
@@ -34,11 +34,12 @@ Then open `http://localhost:8080/`. `index.html` also opens directly in a browse
 | `js/learn-path.js` | Short orientation path |
 | `scripts/verify-integrity.js` | Schema and wording check |
 | `.github/workflows/verify-integrity.yml` | Runs the check on pull requests |
+| `docs/sources-phase1.md` | Phase 1 sourcing notes. The site does not render this file |
 | `CHANGELOG.md` | Editor log. The site does not render it |
 
 Home page: lanes are topics, years run on the x-axis from 1999, search and topic filters sit above the timeline, and the abbreviation key is rendered from `js/site-meta.js`. The footer has one educational-resource notice and the last literature sweep date. There is no reader-visible changelog.
 
-A marker opens a **Trial snapshot**. **More details** uses the same fields and adds limitations, guidelines (with a locus), sources, and where any numbers were read. An optional cross-site link is shown on both views when the card has one. Teach → **Learn path** walks the shell. Teach → **Practice questions** runs study mode or a timed exam. Dialogs have a full-screen control. Esc leaves full screen first, then closes the dialog.
+A marker opens a **Trial snapshot**. **More details** uses the same fields and adds limitations, guidelines (with a locus), sources, and where any numbers were read. `secondaryResults`, when the card has text there, is shown on the snapshot and on More details. A link-only card shows the citation and a link that opens the anticoagulation timeline in a new tab. It does not show design, results, or safety text. Teach → **Learn path** walks the shell. Teach → **Practice questions** runs study mode or a timed exam. Dialogs have a full-screen control. Esc leaves full screen first, then closes the dialog.
 
 Addresses: `#/trial/{id}`, `#/trial/{id}/details`, `#/learn/{step}`, `#/practice`, `#/practice/study/{id}`, `#/practice/exam`.
 
@@ -56,7 +57,7 @@ Keyboard: skip link, `/` focuses search, arrow keys move between markers, Enter 
 | `year` | number | Position on the axis. The axis starts in 1999 |
 | `yearLabel` | string | Text shown with the year |
 | `topic` | string | A topic `id` from `js/data/topics.js` |
-| `status` | string | `published`, `recent`, or `pending` |
+| `status` | string | `published`, `recent`, `pending`, or `link-only` |
 | `title` | string | Placeholders use the exact label below |
 | `citation` | string | Bibliographic line |
 | `pmid` | string | PubMed identifier. `pmid` or `doi` is required |
@@ -65,30 +66,35 @@ Keyboard: skip link, `/` focuses search, arrow keys move between markers, Enter 
 | `population` | string | Who was enrolled, described |
 | `intervention` | string | What was assigned, described |
 | `comparator` | string | Comparison arm, described |
-| `primaryResult` | string | Primary endpoint result, described |
-| `safety` | string | Safety findings, described |
+| `primaryResult` | string | Primary endpoint result, described. Omitted on a link-only card |
+| `secondaryResults` | string | Optional. Secondary and other non-safety results. An empty string leaves the row off the card. Omitted on a link-only card |
+| `safety` | string | Safety findings, described. Omitted on a link-only card |
 | `takeaway` | string | Key takeaway |
 | `limitations` | string | Limits of the study |
 | `guidelines` | array | May be empty. Each entry is a document that cites the trial |
 | `sources` | array | At least one source |
 | `sourceNotes` | array of strings | Optional. Where each number was read |
 | `crossSite` | object | Optional. Link when the same trial is covered on the anticoagulation timeline |
-| `reviewedBy` | — | Do not set this on a card. The site field stays `""` |
+| `reviewedBy` | string | Stays `""` on every card and in `js/site-meta.js` |
 
 Guideline object: `society`, `document`, `year` (number, same year as the trial or later), `locus` (section, table, or page where the trial is cited), and `source` (where that locus was read). `url` is optional.
 
 Source object: `label`, plus at least one of `pmid`, `doi`, or `url`. `note` is optional.
 
-`crossSite`, when present:
+`crossSite`, when present, uses `label` plus `href` or `url`. The address must start with `https://rockyman10.github.io/anticoag-timeline/`. Phase 1 link-only cards use this shape:
 
 ```js
 {
-  label: "Text of the link",
-  href: "https://rockyman10.github.io/anticoag-timeline/#/trial/{id}"
+  site: "anticoag-timeline",
+  label: "Full trial card on the anticoagulation timeline",
+  id: "compass",
+  url: "https://rockyman10.github.io/anticoag-timeline/#/trial/compass"
 }
 ```
 
-`href` must start with `https://rockyman10.github.io/anticoag-timeline/`. Omit `crossSite` when the anticoagulation timeline does not cover that trial. On a placeholder card, `label` must include `EXAMPLE, not a real trial`.
+When `id` is set, the address includes `#/trial/` plus that id. Omit `crossSite` when the anticoagulation timeline does not cover that trial. On a placeholder card, `label` must include `EXAMPLE, not a real trial`.
+
+A `link-only` card keeps the bibliographic fields (`title`, `citation`, `pmid`, `doi`, `sources`) and `crossSite`. It omits design, population, intervention, comparator, `primaryResult`, `secondaryResults`, safety, takeaway, and limitations, so the card does not carry clinical numbers. The marker opens that short card. The link opens the anticoagulation timeline in a new tab.
 
 A placeholder sets `placeholder: true` and its `title` includes:
 
@@ -96,7 +102,7 @@ A placeholder sets `placeholder: true` and its `title` includes:
 EXAMPLE, not a real trial
 ```
 
-The two skeleton cards use that sentence as the whole title. Their years (2005 and 2014) only place the sample markers on the axis.
+The two practice items are still placeholders. Trial cards in phase 1 are not.
 
 ## Question schema
 
@@ -133,7 +139,7 @@ Do not put a disclaimer on a card. The footer carries the one educational-resour
 
 Add a guideline only when that guideline cites the trial, and record the locus (section, table, or page). A guideline list may be empty.
 
-Every number in reader-visible card or question prose needs a source on that card or item (`pmid`, `doi`, or `url`). `year` and `yearLabel` place the marker. Outcome numbers belong in the prose fields and in `sourceNotes` once a real card is written.
+Every number in reader-visible card or question prose needs a source on that card or item (`pmid`, `doi`, or `url`). That includes `secondaryResults`. `year` and `yearLabel` place the marker. Outcome numbers belong in the prose fields and in `sourceNotes`.
 
 Short forms may appear on a card only when `js/site-meta.js` defines them. Write other terms in full.
 

@@ -17,7 +17,7 @@
   --on-accent: #ffffff;
   --overlay: rgba(42, 20, 46, 0.55);
   --shadow: 0 10px 28px rgba(76, 20, 68, 0.14);
-  --label-w: 176px;
+  --label-w: 228px;
   --axis-h: 40px;
   --sub-h: 44px;
   --serif: "Fraunces", Palatino, "Palatino Linotype", Georgia, serif;
@@ -404,6 +404,17 @@ body.modal-open { overflow: hidden; }
 .mk button:hover::before,
 .mk button:focus-visible::before { background: var(--on-accent); }
 .mk.pending button { border-style: dashed; }
+.mk.link-only button { border-style: dotted; }
+.mk.link-only button::after {
+  content: "↗";
+  font-size: 0.75rem;
+  line-height: 1;
+}
+a.btn {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
 .mk.is-selected button { box-shadow: 0 0 0 3px var(--accent-soft); }
 
 .empty-board {
@@ -759,7 +770,7 @@ body.has-fs-modal { overflow: hidden; }
 }
 
 @media (max-width: 700px) {
-  :root { --label-w: 124px; --sub-h: 56px; }
+  :root { --label-w: 132px; --sub-h: 56px; }
   .lane-label { font-size: 0.75rem; align-items: center; }
   .app { padding: 0.85rem 0.75rem 1.4rem; }
   .abbr dl, .abbr-row { grid-template-columns: 1fr; }

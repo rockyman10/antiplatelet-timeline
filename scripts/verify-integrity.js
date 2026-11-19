@@ -26,13 +26,14 @@ const BANS = [
   ["not a dosing order", /not a dosing order/i]
 ];
 const EXEMPT_KEYS = new Set(["id", "doi", "url", "pmid", "href", "color"]);
-const PROSE_KEYS = new Set(["design", "population", "intervention", "comparator", "primaryResult", "safety", "takeaway", "limitations", "stem", "text", "explanation", "body"]);
+const PROSE_KEYS = new Set(["design", "population", "intervention", "comparator", "primaryResult", "secondaryResults", "safety", "takeaway", "limitations", "stem", "text", "explanation", "body"]);
 const IMPERATIVE = [
   /\bshould\s+(?:take|receive|get|be given|be held|be started|be stopped)\b/i,
   /\b(?:give|start|stop|hold|prescribe|resume)\s+\d+/i,
   /\bdo not\s+(?:give|start|stop|hold|prescribe)\b/i
 ];
-const STATUSES = new Set(["published", "recent", "pending"]);
+const STATUSES = new Set(["published", "recent", "pending", "link-only"]);
+const LINK_ONLY_OMIT = ["design", "population", "intervention", "comparator", "primaryResult", "secondaryResults", "safety", "takeaway", "limitations"];
 
 function walk(value, trail, visit, key) {
   if (typeof value === "string") visit(value, trail, key);
@@ -94,10 +95,19 @@ const trialIds = new Set();
 const trialRequired = ["id", "acronym", "year", "yearLabel", "topic", "status", "title", "citation", "design", "population", "intervention", "comparator", "primaryResult", "safety", "takeaway", "limitations"];
 (trials || []).forEach((trial, index) => {
   const where = "trials[" + index + "] " + (trial && trial.id || "?");
+  const linkOnly = !!(trial && trial.status === "link-only");
   trialRequired.forEach(key => {
+    if (linkOnly && LINK_ONLY_OMIT.indexOf(key) !== -1) return;
     const value = trial && trial[key];
     if (value == null || (typeof value === "string" && !value.trim())) add("ERROR", "schema", where, "missing/empty required field \"" + key + "\"");
   });
+  if (trial && trial.secondaryResults != null && typeof trial.secondaryResults !== "string") add("ERROR", "schema", where, "secondaryResults must be a string when present");
+  if (linkOnly) {
+    LINK_ONLY_OMIT.forEach(key => {
+      if (nonEmpty(trial[key])) add("ERROR", "schema", where, "link-only card must not include \"" + key + "\"");
+    });
+    if (!trial.crossSite) add("ERROR", "schema", where, "link-only card needs crossSite");
+  }
   if (!trial || typeof trial.placeholder !== "boolean") add("ERROR", "schema", where, "placeholder must be true or false");
   if (typeof (trial && trial.year) !== "number") add("ERROR", "schema", where, "year must be a number");
   if (trial && trial.status && !STATUSES.has(trial.status)) add("ERROR", "schema", where, "unknown status \"" + trial.status + "\"");
@@ -122,8 +132,10 @@ const trialRequired = ["id", "acronym", "year", "yearLabel", "topic", "status", 
     if (!link || typeof link !== "object" || Array.isArray(link)) add("ERROR", "schema", spot, "crossSite must be an object");
     else {
       if (!nonEmpty(link.label)) add("ERROR", "schema", spot, "label required");
-      if (!nonEmpty(link.href)) add("ERROR", "schema", spot, "href required");
-      else if (!/^https:\/\/rockyman10\.github\.io\/anticoag-timeline\//.test(link.href)) add("ERROR", "schema", spot, "href must point at the anticoagulation timeline");
+      const href = nonEmpty(link.href) ? link.href : link.url;
+      if (!nonEmpty(href)) add("ERROR", "schema", spot, "href or url required");
+      else if (!/^https:\/\/rockyman10\.github\.io\/anticoag-timeline\//.test(href)) add("ERROR", "schema", spot, "href must point at the anticoagulation timeline");
+      else if (link.id && href.indexOf("#/trial/" + link.id) === -1) add("ERROR", "schema", spot, "url must include #/trial/" + link.id);
       if (trial.placeholder === true && !String(link.label || "").includes(PHRASE)) add("ERROR", "placeholder", spot, "label must include \"" + PHRASE + "\"");
     }
   }

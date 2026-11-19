@@ -15,7 +15,7 @@ window.ANTIPLATELET_LEARN_PATH = {
       id: "snapshot",
       title: "Trial snapshot",
       body: "A marker opens one Trial snapshot. More details keeps the same fields, then adds limitations, any guideline that cites the trial, the locus for that citation, sources, and where the numbers were read. A card can also carry a link to the anticoagulation timeline when that trial is covered there.",
-      action: { kind: "trial", id: "example-a", label: "Open the example snapshot" }
+      action: { kind: "trial", id: "plato", label: "Open the PLATO snapshot" }
     },
     {
       id: "practice",
